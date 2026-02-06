@@ -31,8 +31,8 @@ def test_init():
 
 
 def test_work_list():
-    """Test that work list command exists."""
+    """Test that work list command requires a station argument."""
     runner = CliRunner()
     result = runner.invoke(main, ["work", "list"])
-    assert result.exit_code == 0
-    assert "not yet implemented" in result.output
+    assert result.exit_code == 1  # ClickException when no station provided
+    assert "No station specified" in result.output
