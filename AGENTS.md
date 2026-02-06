@@ -13,6 +13,10 @@ We DO NOT:
 - Maintain ticket state (ticket systems are source of truth)
 - Make opinionated decisions about workflows (user-configurable)
 
+## Development Setup
+
+See `DEVELOPMENT.md` for instructions on setting up the development environment, running tests, and using the project tooling.
+
 ## Architecture Principles
 
 See `docs/architecture-principles.md` for detailed architectural decisions and princles when needing to make decisions.

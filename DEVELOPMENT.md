@@ -28,25 +28,25 @@ choo --help
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run tests with coverage
-pytest --cov=choo tests/
+uv run pytest --cov=choo tests/
 
 # Run specific test
-pytest tests/test_cli.py::test_version -v
+uv run pytest tests/test_cli.py::test_version -v
 ```
 
 ### Code Quality
 
 ```bash
 # Run ruff linter
-ruff check .
+uv run ruff check .
 
 # Auto-fix issues
-ruff check --fix .
+uv run ruff check --fix .
 
 # Format code
-ruff format .
+uv run ruff format .
 ```
 
