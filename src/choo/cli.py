@@ -10,7 +10,9 @@ from rich.table import Table
 from choo import __version__
 from choo.adapters.base import IssueNotFoundError
 from choo.adapters.factory import AdapterError, create_adapter
+from choo.agent_adapters.factory import AgentAdapterError, create_agent_adapter
 from choo.config import ChooConfig, ConfigError
+from choo.prompts import PromptError, load_combined_prompt
 
 console = Console()
 
@@ -53,6 +55,99 @@ def init():
 def choo():
     """Start the orchestration engine."""
     console.print("[yellow]choo choo - not yet implemented[/yellow]")
+
+
+@main.group()
+def train():
+    """Commands for managing trains."""
+    pass
+
+
+@train.command("run")
+@click.argument("train_name", required=False)
+def train_run(train_name):
+    """Run a train once.
+
+    TRAIN_NAME: Name of the train to run. If not provided, uses
+    CHOO_TRAIN_NAME environment variable.
+    """
+    try:
+        # Get train name from argument or environment variable
+        if train_name is None:
+            train_name = os.environ.get("CHOO_TRAIN_NAME")
+            if train_name is None:
+                raise click.ClickException(
+                    "No train name specified. Provide a train name argument "
+                    "or set CHOO_TRAIN_NAME environment variable."
+                )
+            console.print(f"[dim]Using train from CHOO_TRAIN_NAME: {train_name}[/dim]\n")
+
+        # Load configuration
+        config = load_config()
+
+        # Find the train configuration
+        train_config = None
+        for t in config.trains:
+            if t.name == train_name:
+                train_config = t
+                break
+
+        if train_config is None:
+            available = ", ".join(t.name for t in config.trains)
+            raise click.ClickException(
+                f"Train '{train_name}' not found in configuration. "
+                f"Available trains: {available}"
+            )
+
+        # Find project root (where .choo directory is)
+        choo_dir = Path(".choo")
+        if not choo_dir.exists():
+            raise click.ClickException(
+                "No .choo directory found in current directory. "
+                "Run this command from the project root."
+            )
+        project_root = Path.cwd()
+
+        # Load and combine prompts
+        console.print(f"[cyan]Loading prompts for train '{train_name}'...[/cyan]")
+        try:
+            combined_prompt = load_combined_prompt(train_name, choo_dir)
+        except PromptError as e:
+            raise click.ClickException(str(e))
+
+        # Set up environment variables for the agent
+        agent_env = {
+            "CHOO_TRAIN_NAME": train_config.name,
+            "CHOO_FROM_STATION": train_config.from_station,
+            "CHOO_TO_STATION": train_config.to_station,
+        }
+
+        # Create agent adapter
+        try:
+            agent_adapter = create_agent_adapter(train_config.cli)
+        except AgentAdapterError as e:
+            raise click.ClickException(str(e))
+
+        # Run the agent
+        console.print(f"[green]Starting train '{train_name}' ({train_config.cli})...[/green]")
+        console.print(f"[dim]From station: {train_config.from_station}[/dim]")
+        console.print(f"[dim]To station: {train_config.to_station}[/dim]")
+        console.print()
+
+        exit_code = agent_adapter.run(
+            system_prompt=combined_prompt,
+            working_dir=project_root,
+            env=agent_env,
+        )
+
+        if exit_code == 0:
+            console.print(f"\n[green]✓ Train '{train_name}' completed successfully[/green]")
+        else:
+            console.print(f"\n[red]✗ Train '{train_name}' exited with code {exit_code}[/red]")
+            raise SystemExit(exit_code)
+
+    except (ConfigError, AgentAdapterError) as e:
+        raise click.ClickException(str(e))
 
 
 @main.group()
@@ -102,7 +197,7 @@ def work_list(ctx, station):
 
         if not issues:
             console.print(f"[yellow]No issues found at station: {station}[/yellow]")
-            console.print(f"[dim](Station exists but contains no issues)[/dim]")
+            console.print("[dim](Station exists but contains no issues)[/dim]")
             return
 
         # Create a table to display issues
@@ -153,7 +248,7 @@ def work_read(ctx, issue_id):
             console.print(f"[bold]URL:[/bold] {issue.url}")
 
         if issue.body:
-            console.print(f"\n[bold]Description:[/bold]")
+            console.print("\n[bold]Description:[/bold]")
             console.print(issue.body)
 
         # Display comments
@@ -166,7 +261,7 @@ def work_read(ctx, issue_id):
                     console.print(f"[dim]{comment['created_at']}[/dim]")
                 console.print(comment["body"])
         else:
-            console.print(f"\n[dim]No comments[/dim]")
+            console.print("\n[dim]No comments[/dim]")
 
     except IssueNotFoundError as e:
         raise click.ClickException(str(e))
