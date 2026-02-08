@@ -65,7 +65,8 @@ def train():
 
 @train.command("run")
 @click.argument("train_name", required=False)
-def train_run(train_name):
+@click.pass_context
+def train_run(ctx, train_name):
     """Run a train once.
 
     TRAIN_NAME: Name of the train to run. If not provided, uses
@@ -134,10 +135,12 @@ def train_run(train_name):
         console.print(f"[dim]To station: {train_config.to_station}[/dim]")
         console.print()
 
+        verbose = ctx.obj.get("verbose", False)
         exit_code = agent_adapter.run(
             system_prompt=combined_prompt,
             working_dir=project_root,
             env=agent_env,
+            verbose=verbose,
         )
 
         if exit_code == 0:
