@@ -11,11 +11,12 @@ class AdapterError(Exception):
     pass
 
 
-def create_adapter(config: TicketSystemConfig) -> TicketSystemAdapter:
+def create_adapter(config: TicketSystemConfig, verbose: bool = False) -> TicketSystemAdapter:
     """Create a ticket system adapter from configuration.
 
     Args:
         config: Ticket system configuration
+        verbose: If True, enable verbose logging
 
     Returns:
         Initialized adapter instance
@@ -24,6 +25,6 @@ def create_adapter(config: TicketSystemConfig) -> TicketSystemAdapter:
         AdapterError: If adapter type is unknown or creation fails
     """
     if config.type == "github-project-gh":
-        return GitHubProjectAdapter(config.config)
+        return GitHubProjectAdapter(config.config, verbose=verbose)
 
     raise AdapterError(f"Unknown adapter type: {config.type}")

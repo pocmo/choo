@@ -32,13 +32,15 @@ def load_config() -> ChooConfig:
 
 @click.group()
 @click.version_option(version=__version__, prog_name="choo")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed command execution and rate limits")
 @click.pass_context
-def main(ctx):
+def main(ctx, verbose):
     """Choo - An agent orchestration framework for AI-powered development workflows.
 
     🚂 Orchestrate AI agents through customizable development workflows.
     """
     ctx.ensure_object(dict)
+    ctx.obj["verbose"] = verbose
 
 
 @main.command()
@@ -61,7 +63,8 @@ def work():
 
 @work.command("list")
 @click.argument("station", required=False)
-def work_list(station):
+@click.pass_context
+def work_list(ctx, station):
     """List available work items at a station.
 
     STATION: The workflow stage to list issues from (e.g., "Backlog", "Todo").
@@ -78,7 +81,7 @@ def work_list(station):
             console.print(f"[dim]Using station from CHOO_FROM_STATION: {station}[/dim]\n")
 
         config = load_config()
-        adapter = create_adapter(config.ticket_system)
+        adapter = create_adapter(config.ticket_system, verbose=ctx.obj.get("verbose", False))
 
         # Get all available stations
         available_stations = adapter.list_stations()
@@ -128,14 +131,15 @@ def work_list(station):
 
 @work.command("read")
 @click.argument("issue_id")
-def work_read(issue_id):
+@click.pass_context
+def work_read(ctx, issue_id):
     """Read full issue details.
 
     ISSUE_ID: The issue number to read
     """
     try:
         config = load_config()
-        adapter = create_adapter(config.ticket_system)
+        adapter = create_adapter(config.ticket_system, verbose=ctx.obj.get("verbose", False))
         issue = adapter.get_issue(issue_id)
 
         # Display issue details
@@ -174,14 +178,15 @@ def work_read(issue_id):
 
 @work.command("start")
 @click.argument("issue_id")
-def work_start(issue_id):
+@click.pass_context
+def work_start(ctx, issue_id):
     """Start working on an issue (claims it).
 
     ISSUE_ID: The issue number to claim
     """
     try:
         config = load_config()
-        adapter = create_adapter(config.ticket_system)
+        adapter = create_adapter(config.ticket_system, verbose=ctx.obj.get("verbose", False))
         adapter.claim_issue(issue_id)
         console.print(f"[green]✓[/green] Claimed issue #{issue_id}")
 
@@ -194,7 +199,8 @@ def work_start(issue_id):
 @work.command("complete")
 @click.argument("issue_id")
 @click.argument("to_station", required=False)
-def work_complete(issue_id, to_station):
+@click.pass_context
+def work_complete(ctx, issue_id, to_station):
     """Complete work on an issue (moves it to next station).
 
     ISSUE_ID: The issue number to complete
@@ -212,7 +218,7 @@ def work_complete(issue_id, to_station):
             console.print(f"[dim]Using station from CHOO_TO_STATION: {to_station}[/dim]\n")
 
         config = load_config()
-        adapter = create_adapter(config.ticket_system)
+        adapter = create_adapter(config.ticket_system, verbose=ctx.obj.get("verbose", False))
         adapter.move_issue(issue_id, to_station)
         console.print(f"[green]✓[/green] Moved issue #{issue_id} to {to_station}")
 
@@ -233,7 +239,8 @@ def work_blocked(issue_id, reason):
 @work.command("comment")
 @click.argument("issue_id")
 @click.argument("message")
-def work_comment(issue_id, message):
+@click.pass_context
+def work_comment(ctx, issue_id, message):
     """Add a comment to an issue.
 
     ISSUE_ID: The issue number to comment on
@@ -241,7 +248,7 @@ def work_comment(issue_id, message):
     """
     try:
         config = load_config()
-        adapter = create_adapter(config.ticket_system)
+        adapter = create_adapter(config.ticket_system, verbose=ctx.obj.get("verbose", False))
         adapter.add_comment(issue_id, message)
         console.print(f"[green]✓[/green] Added comment to issue #{issue_id}")
 
