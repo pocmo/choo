@@ -236,4 +236,4 @@ Choo is in early development. This README documents the vision and intended func
 
 ## License
 
-TBD
+MIT License - See [LICENSE](LICENSE) for details.
