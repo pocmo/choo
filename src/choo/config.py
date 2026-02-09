@@ -24,6 +24,8 @@ class TicketSystemConfig:
         """Validate ticket system configuration."""
         if self.type == "github-project-gh":
             self._validate_github_config()
+        elif self.type == "jira-acli":
+            self._validate_jira_config()
         else:
             raise ConfigError(f"Unknown ticket system type: {self.type}")
 
@@ -41,6 +43,28 @@ class TicketSystemConfig:
             raise ConfigError("ticket_system.config.repo must be a string")
         if not isinstance(self.config["project_number"], int):
             raise ConfigError("ticket_system.config.project_number must be an integer")
+
+        # Validate claim_method if present
+        if "claim_method" in self.config:
+            valid_methods = ["assignee", "label"]
+            if self.config["claim_method"] not in valid_methods:
+                raise ConfigError(
+                    f"Invalid claim_method: {self.config['claim_method']}. "
+                    f"Must be one of: {valid_methods}"
+                )
+
+    def _validate_jira_config(self) -> None:
+        """Validate Jira-specific configuration."""
+        required = ["project", "agent_label"]
+        for field in required:
+            if field not in self.config:
+                raise ConfigError(f"Missing required field in ticket_system.config: {field}")
+
+        # Validate types
+        if not isinstance(self.config["project"], str):
+            raise ConfigError("ticket_system.config.project must be a string")
+        if not isinstance(self.config["agent_label"], str):
+            raise ConfigError("ticket_system.config.agent_label must be a string")
 
         # Validate claim_method if present
         if "claim_method" in self.config:
