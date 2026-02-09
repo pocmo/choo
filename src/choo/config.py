@@ -84,6 +84,7 @@ class TrainConfig:
     from_station: str
     to_station: str
     cli: str
+    binary: str | None = None  # Optional: path to CLI binary
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TrainConfig":
@@ -105,7 +106,7 @@ class TrainConfig:
                 raise ConfigError(f"Missing required field in train config: {field}")
 
         # Check for unknown keys (strict validation)
-        known_keys = {"name", "from_station", "to_station", "cli"}
+        known_keys = {"name", "from_station", "to_station", "cli", "binary"}
         unknown = set(data.keys()) - known_keys
         if unknown:
             raise ConfigError(f"Unknown train configuration keys: {', '.join(unknown)}")
@@ -119,12 +120,15 @@ class TrainConfig:
             raise ConfigError("train.to_station must be a string")
         if not isinstance(data["cli"], str):
             raise ConfigError("train.cli must be a string")
+        if "binary" in data and not isinstance(data["binary"], str):
+            raise ConfigError("train.binary must be a string")
 
         return cls(
             name=data["name"],
             from_station=data["from_station"],
             to_station=data["to_station"],
             cli=data["cli"],
+            binary=data.get("binary"),
         )
 
 
