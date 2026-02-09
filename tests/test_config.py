@@ -664,3 +664,98 @@ trains:
         }
 
         Path(f.name).unlink()
+
+
+def test_train_with_binary_parameter():
+    """Test loading train configuration with binary parameter."""
+    config_content = """
+ticket_system:
+  type: github-project-gh
+  config:
+    owner: testorg
+    repo: testrepo
+    project_number: 1
+
+stations:
+  - backlog
+  - done
+
+trains:
+  - name: copilot-train
+    from_station: backlog
+    to_station: done
+    cli: copilot
+    binary: /opt/homebrew/bin/copilot
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        config = ChooConfig.load(f.name)
+        assert len(config.trains) == 1
+        assert config.trains[0].name == "copilot-train"
+        assert config.trains[0].cli == "copilot"
+        assert config.trains[0].binary == "/opt/homebrew/bin/copilot"
+
+        Path(f.name).unlink()
+
+
+def test_train_binary_optional():
+    """Test that binary parameter is optional."""
+    config_content = """
+ticket_system:
+  type: github-project-gh
+  config:
+    owner: testorg
+    repo: testrepo
+    project_number: 1
+
+stations:
+  - backlog
+  - done
+
+trains:
+  - name: claude-train
+    from_station: backlog
+    to_station: done
+    cli: claude
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        config = ChooConfig.load(f.name)
+        assert config.trains[0].binary is None
+
+        Path(f.name).unlink()
+
+
+def test_train_binary_must_be_string():
+    """Test that binary parameter must be a string."""
+    config_content = """
+ticket_system:
+  type: github-project-gh
+  config:
+    owner: testorg
+    repo: testrepo
+    project_number: 1
+
+stations:
+  - backlog
+  - done
+
+trains:
+  - name: test-train
+    from_station: backlog
+    to_station: done
+    cli: copilot
+    binary: 123
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        with pytest.raises(ConfigError, match="train.binary must be a string"):
+            ChooConfig.load(f.name)
+
+        Path(f.name).unlink()

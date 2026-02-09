@@ -14,7 +14,7 @@ Think of it as a **lightweight workflow engine** where:
 ## Key Features
 
 - **Ticket System Agnostic**: Works with GitHub Issues, Jira, or any ticket system via adapters
-- **Agent Agnostic**: Orchestrates existing AI CLI tools (claude, opencode, etc.)
+- **Agent Agnostic**: Orchestrates existing AI CLI tools (claude, copilot, etc.)
 - **Flexible Workflows**: Define your own workflow stages and configure which agents handle what
 - **Human-in-the-Loop**: Seamlessly mix AI automation with human review stages
 - **Clean Separation**: Agents don't manage tickets directly - choo provides the abstraction layer
@@ -151,7 +151,7 @@ In choo's metaphor, trains are agent instances that move passengers (issues) bet
 - Claims the issue (via assignee, label, or other mechanism) to mark it as in-progress
 - Moves it to a `to_station` when complete
 - Works on one issue at a time with fresh context
-- Runs an external AI CLI tool (claude, opencode, etc.)
+- Runs an external AI CLI tool (claude, copilot, etc.)
 
 Issues remain in their column while being worked on, but are marked as claimed so other agents don't pick them up. This allows humans viewing the ticket board to see both waiting and in-progress work in the same column.
 

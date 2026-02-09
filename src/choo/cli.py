@@ -125,7 +125,7 @@ def train_run(ctx, train_name):
 
         # Create agent adapter
         try:
-            agent_adapter = create_agent_adapter(train_config.cli)
+            agent_adapter = create_agent_adapter(train_config)
         except AgentAdapterError as e:
             raise click.ClickException(str(e))
 
