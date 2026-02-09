@@ -37,9 +37,9 @@ class CopilotAdapter(AgentAdapter):
         Returns:
             Exit code from Copilot process
         """
-        # Build command with system prompt via environment variable
-        # (Copilot CLI reads GITHUB_COPILOT_SYSTEM_PROMPT or passes via stdin)
-        cmd = [self.binary]
+        # Build command with system prompt and allow all tools
+        # --allow-all-tools is required for non-interactive mode
+        cmd = [self.binary, "-p", system_prompt, "--allow-all-tools"]
 
         # Print command if verbose
         if verbose:
@@ -54,11 +54,9 @@ class CopilotAdapter(AgentAdapter):
             print(f"  System prompt length: {len(system_prompt)} chars\n", file=sys.stderr)
 
         # Merge environment variables with current environment
-        # Pass system prompt via environment variable
         process_env = {
             **subprocess.os.environ,
             **env,
-            "GITHUB_COPILOT_SYSTEM_PROMPT": system_prompt,
         }
 
         # Run Copilot

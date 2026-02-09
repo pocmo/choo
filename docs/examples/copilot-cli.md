@@ -54,9 +54,10 @@ This is useful when:
 
 When you run a train with the Copilot CLI:
 
-1. Choo passes the system prompt via the `GITHUB_COPILOT_SYSTEM_PROMPT` environment variable
-2. Copilot runs in your working directory with access to your codebase
-3. Standard environment variables are available:
+1. Choo passes the system prompt via the `-p` (prompt) flag
+2. The `--allow-all-tools` flag is automatically added for non-interactive mode
+3. Copilot runs in your working directory with access to your codebase
+4. Standard environment variables are available:
    - `CHOO_TRAIN_NAME`: Name of the train
    - `CHOO_FROM_STATION`: Source station
    - `CHOO_TO_STATION`: Destination station
@@ -80,10 +81,11 @@ Copilot will:
 
 Choo sets the following environment variables that Copilot can access:
 
-- `GITHUB_COPILOT_SYSTEM_PROMPT`: The combined system + train prompts
 - `CHOO_TRAIN_NAME`: Name of the current train
 - `CHOO_FROM_STATION`: The station where work items are picked up
 - `CHOO_TO_STATION`: The station where completed items are moved
+
+The system prompt is passed directly via the `-p` flag rather than an environment variable.
 
 ## Customizing Prompts
 
@@ -113,10 +115,11 @@ Process:
 | Feature | Claude | Copilot |
 |---------|--------|---------|
 | Custom binary path | ❌ Not yet supported | ✅ Supported via `binary` config |
-| System prompt | ✅ Via CLI args | ✅ Via environment variable |
+| System prompt | ✅ Via CLI args | ✅ Via `-p` flag |
 | Interactive mode | ✅ Yes | ✅ Yes |
 | Built-in code execution | ✅ Yes | ✅ Yes |
 | Authentication | API key | GitHub authentication |
+| Tool permissions | Always enabled | `--allow-all-tools` flag |
 
 ## Troubleshooting
 
@@ -139,11 +142,11 @@ trains:
 
 ### System prompt not working
 
-The Copilot CLI reads the system prompt from the `GITHUB_COPILOT_SYSTEM_PROMPT` environment variable. Choo automatically sets this for you. If your prompts aren't being applied:
+The Copilot CLI receives the system prompt via the `-p` flag. Choo automatically passes your combined system + train prompts. If your prompts aren't being applied:
 
 1. Check that `.choo/prompts/system.md` exists
 2. Verify the train-specific prompt file matches your train name
-3. Use `--verbose` flag to see the environment variables being set:
+3. Use `--verbose` flag to see the command being executed:
    ```bash
    choo train start copilot-agent --verbose
    ```

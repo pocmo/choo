@@ -48,18 +48,16 @@ def test_run_basic(mock_run, copilot_adapter):
     assert exit_code == 0
     mock_run.assert_called_once()
 
-    # Check command
+    # Check command includes prompt and allow-all-tools
     call_args = mock_run.call_args
     cmd = call_args[0][0]
-    assert cmd == ["copilot"]
+    assert cmd == ["copilot", "-p", system_prompt, "--allow-all-tools"]
 
     # Check working directory
     assert call_args[1]["cwd"] == working_dir
 
-    # Check environment includes system prompt
+    # Check environment includes custom variables
     process_env = call_args[1]["env"]
-    assert "GITHUB_COPILOT_SYSTEM_PROMPT" in process_env
-    assert process_env["GITHUB_COPILOT_SYSTEM_PROMPT"] == system_prompt
     assert process_env["KEY"] == "value"
 
 
@@ -76,10 +74,10 @@ def test_run_custom_binary(mock_run, copilot_adapter_custom):
 
     copilot_adapter_custom.run(system_prompt, working_dir, env)
 
-    # Check custom binary is used
+    # Check custom binary is used with proper arguments
     call_args = mock_run.call_args
     cmd = call_args[0][0]
-    assert cmd == ["/custom/path/to/copilot"]
+    assert cmd == ["/custom/path/to/copilot", "-p", system_prompt, "--allow-all-tools"]
 
 
 @patch("subprocess.run")
@@ -133,9 +131,8 @@ def test_run_environment_merge(mock_run, copilot_adapter):
 
     copilot_adapter.run(system_prompt, working_dir, env)
 
-    # Check that both custom and system prompt env vars are set
+    # Check that custom env vars are set
     call_args = mock_run.call_args
     process_env = call_args[1]["env"]
-    assert "GITHUB_COPILOT_SYSTEM_PROMPT" in process_env
     assert process_env["CUSTOM_VAR"] == "custom_value"
     assert process_env["PATH"] == "/custom/path"
