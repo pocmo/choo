@@ -134,6 +134,10 @@ def train_run(ctx, train_name):
         console.print(f"[dim]From station: {train_config.from_station}[/dim]")
         console.print(f"[dim]To station: {train_config.to_station}[/dim]")
         console.print()
+        
+        # Add visual separator before agent output
+        console.rule(f"[cyan]Agent Output[/cyan]")
+        console.print()
 
         verbose = ctx.obj.get("verbose", False)
         exit_code = agent_adapter.run(
@@ -143,10 +147,15 @@ def train_run(ctx, train_name):
             verbose=verbose,
         )
 
+        # Add visual separator after agent output
+        console.print()
+        console.rule(f"[cyan]End Agent Output[/cyan]")
+        console.print()
+
         if exit_code == 0:
-            console.print(f"\n[green]✓ Train '{train_name}' completed successfully[/green]")
+            console.print(f"[green]✓ Train '{train_name}' completed successfully[/green]")
         else:
-            console.print(f"\n[red]✗ Train '{train_name}' exited with code {exit_code}[/red]")
+            console.print(f"[red]✗ Train '{train_name}' exited with code {exit_code}[/red]")
             raise SystemExit(exit_code)
 
     except (ConfigError, AgentAdapterError) as e:
