@@ -1,7 +1,6 @@
 """Data models for choo."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -10,10 +9,10 @@ class Issue:
 
     id: str
     title: str
-    body: Optional[str]
+    body: str | None
     station: str  # Current workflow stage (e.g., "Backlog", "In Progress")
-    url: Optional[str] = None
-    assignee: Optional[str] = None
+    url: str | None = None
+    assignee: str | None = None
     labels: list[str] = None
 
     def __post_init__(self):

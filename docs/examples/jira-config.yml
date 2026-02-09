@@ -1,0 +1,65 @@
+# Example Jira Configuration for Choo
+
+# This example shows how to configure choo to work with Jira using the acli CLI.
+
+# Prerequisites:
+# 1. Install acli: https://developer.atlassian.com/cloud/acli/
+# 2. Authenticate: acli jira auth login --web
+# 3. Create an "agent-ready" label in your Jira project
+
+ticket_system:
+  type: jira-acli
+  config:
+    # Required: Jira project key (e.g., "PROJ", "TEAM", "DEV")
+    project: MYPROJ
+    
+    # Required: Label to identify issues that agents should work on
+    # Humans add this label when an issue is ready for AI processing
+    agent_label: agent-ready
+    
+    # Optional: How agents claim work (default: assignee)
+    # - assignee: Assign issue to agent user (@me)
+    # - label: Add "in-progress" label to issue
+    claim_method: assignee
+    
+    # Optional: Map choo station names to Jira status names
+    # Use this if your Jira statuses have different names than your stations
+    # status_mapping:
+    #   backlog: "To Do"
+    #   in-progress: "In Progress"
+    #   review: "Code Review"
+    #   testing: "QA Testing"
+    #   done: "Done"
+
+# Define workflow stages (map to Jira statuses)
+stations:
+  - backlog      # Maps to "Backlog" status in Jira (or use status_mapping)
+  - in-progress  # Maps to "In Progress" status
+  - testing      # Maps to "Testing" status
+  - review       # Maps to "Review" status (human-only station)
+  - done         # Maps to "Done" status
+
+# Configure AI agents (trains) that move work between stations
+trains:
+  - name: code-writer
+    from_station: backlog
+    to_station: testing
+    cli: claude
+    # This agent picks up issues with status="Backlog" AND labels="agent-ready"
+    # It works on them, then transitions them to status="Testing"
+
+  - name: test-runner
+    from_station: testing
+    to_station: review
+    cli: claude
+    # This agent picks up issues with status="Testing" AND labels="agent-ready"
+    # After testing, it moves them to "Review" for human review
+
+# Workflow:
+# 1. Human creates Jira issue with status "Backlog"
+# 2. When ready for AI → Human adds "agent-ready" label
+# 3. code-writer agent picks it up (claims via assignee)
+# 4. Agent works on it, transitions to "Testing"
+# 5. test-runner picks it up from "Testing" (if still has agent-ready label)
+# 6. After testing, moves to "Review" for human review
+# 7. Human reviews and manually moves to "Done"

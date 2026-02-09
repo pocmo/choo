@@ -539,3 +539,128 @@ trains: "not a list"
             ChooConfig.load(f.name)
 
         Path(f.name).unlink()
+
+
+def test_load_valid_jira_config():
+    """Test loading a valid Jira configuration."""
+    config_content = """
+ticket_system:
+  type: jira-acli
+  config:
+    project: TEST
+    agent_label: agent-ready
+    claim_method: assignee
+
+stations:
+  - todo
+  - done
+
+trains:
+  - name: dev
+    from_station: todo
+    to_station: done
+    cli: claude
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        config = ChooConfig.load(f.name)
+        assert config.ticket_system.type == "jira-acli"
+        assert config.ticket_system.config["project"] == "TEST"
+        assert config.ticket_system.config["agent_label"] == "agent-ready"
+        assert config.ticket_system.config["claim_method"] == "assignee"
+        assert config.stations == ["todo", "done"]
+
+        Path(f.name).unlink()
+
+
+def test_jira_missing_project():
+    """Test error when Jira config is missing project."""
+    config_content = """
+ticket_system:
+  type: jira-acli
+  config:
+    agent_label: agent-ready
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        with pytest.raises(ConfigError, match="project"):
+            ChooConfig.load(f.name)
+
+        Path(f.name).unlink()
+
+
+def test_jira_missing_agent_label():
+    """Test error when Jira config is missing agent_label."""
+    config_content = """
+ticket_system:
+  type: jira-acli
+  config:
+    project: TEST
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        with pytest.raises(ConfigError, match="agent_label"):
+            ChooConfig.load(f.name)
+
+        Path(f.name).unlink()
+
+
+def test_jira_invalid_claim_method():
+    """Test error when Jira config has invalid claim_method."""
+    config_content = """
+ticket_system:
+  type: jira-acli
+  config:
+    project: TEST
+    agent_label: agent-ready
+    claim_method: invalid
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        with pytest.raises(ConfigError, match="Invalid claim_method"):
+            ChooConfig.load(f.name)
+
+        Path(f.name).unlink()
+
+
+def test_jira_with_status_mapping():
+    """Test loading Jira config with status mapping."""
+    config_content = """
+ticket_system:
+  type: jira-acli
+  config:
+    project: TEST
+    agent_label: agent-ready
+    status_mapping:
+      backlog: To Do
+      done: Completed
+
+stations:
+  - backlog
+  - done
+
+trains:
+  - name: dev
+    from_station: backlog
+    to_station: done
+    cli: claude
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
+        f.write(config_content)
+        f.flush()
+
+        config = ChooConfig.load(f.name)
+        assert config.ticket_system.config["status_mapping"] == {
+            "backlog": "To Do",
+            "done": "Completed",
+        }
+
+        Path(f.name).unlink()
