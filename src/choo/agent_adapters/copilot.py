@@ -59,11 +59,14 @@ class CopilotAdapter(AgentAdapter):
             **env,
         }
 
-        # Run Copilot
+        # Run Copilot with streaming output
+        # By not capturing stdout/stderr, output streams directly to console
         result = subprocess.run(
             cmd,
             cwd=working_dir,
             env=process_env,
+            stdout=None,  # Inherit parent's stdout (stream to console)
+            stderr=None,  # Inherit parent's stderr (stream to console)
         )
 
         return result.returncode
